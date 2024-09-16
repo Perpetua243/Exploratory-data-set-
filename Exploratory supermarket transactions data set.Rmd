@@ -1,0 +1,331 @@
+---
+title: "supermarket transactions data set"
+author: "perpetua odili"
+date: "2024-09-11"
+output: html_document
+---
+
+```{r}
+## THIS IS AN EXPLORATRORY DATA SET TO TEST MY KNOWLEDGE IN R
+
+## WE WILL BE TESTING FOR SALES TRENDS,CUSTOMER BEHAVIOUR,TOTAL REVENUE OVER TIME USING THE SUPERMARKET TRANSACTION DATA SET.
+
+## LOAD THE TIDYVERSE PACKAGE INTO R
+
+library(tidyverse)
+
+```
+
+
+```{r}
+## import data set
+## The data set was in xlsx so i had to convert to csv using microsoft excel in the "save AS part" before i could import it here
+
+SupermarketTransactions <- read.csv(file.choose())
+```
+
+
+```{r}
+View(SupermarketTransactions)
+```
+
+
+```{r}
+## check for the structure of the data set
+
+str(SupermarketTransactions)
+```
+
+
+```{r}
+## Display the number of records in the data set both rows and columns
+nrow(SupermarketTransactions)
+ncol(SupermarketTransactions)
+```
+```{r}
+## check for any missing data
+missing_values <- colSums(is.na(SupermarketTransactions))
+print(missing_values)
+
+```
+```{r}
+## View the first few rows in the dataset
+head(SupermarketTransactions)
+```
+
+
+
+```{r}
+## check for any missing data
+missing_values <- colSums(is.na(SupermarketTransactions))
+print(missing_values)
+
+```
+
+
+```{r}
+## Q1 WHAT IS THE SUMAMARY STATISTICS (MEAN,MEDIAN,MAX ETC) FOR ANNUAL INCOME AND CHILDREN
+summary(SupermarketTransactions$Annual.Income)
+
+summary(SupermarketTransactions$Children)
+```
+
+
+```{r}
+## Q2 HOW MANY CUSTOMERS ARE "NOT" HOMEOWNERS 
+SupermarketTransactions %>%
+  filter(Homeowner =="N") %>%  ## where N stand for not home owners according to the dataset
+  summarise(Homeowner = n())
+```
+
+
+```{r}
+## Q3 ### SHOW ALL THE CUSTOMERS THAT HAS MORE THAN 2 CHILDREN AND THE REVENUE GENERATED
+library(dplyr)
+SupermarketTransactions %>%
+  filter(Children >="2")%>%
+  group_by(Customer.ID,Revenue,Children)%>%
+  summarise()
+```
+
+ 
+ 
+```{r}
+## Q4  WHAT IS THE TOTAL REVENUE MADE IN EACH STATE OR PROVINCE
+library(dplyr)
+str(SupermarketTransactions) ## had to recheck the structure of the data set
+glimpse(SupermarketTransactions)
+SupermarketTransactions <- SupermarketTransactions %>%
+  mutate(Revenue = as.numeric(gsub("[^0-9.-]", "", Revenue))) #change revenue which is a character vector to  numeric so that summarize and sum function will work
+
+SupermarketTransactions %>%
+  group_by(State.or.Province) %>%
+  summarise(TotalRevenue =sum(Revenue))
+```
+
+
+
+```{r}
+## Q5 SHOW THE NUMBER OF TRANSACTIONS PER CUSTOMER
+transactions_per_customer <- SupermarketTransactions %>%
+  group_by(Customer.ID) %>%
+  summarise(Transaction = n())%>%
+  arrange(desc(Customer.ID))
+ 
+
+```
+
+
+
+```{r}
+## Q7 SHOW THE TOP 5 PRODUCTS BY ANNUAL INCOME
+library(dplyr)
+str(SupermarketTransactions) ## had to recheck the structure of the data set
+glimpse(SupermarketTransactions)
+SupermarketTransactions <- SupermarketTransactions %>%
+  mutate(Annual.Income = as.numeric(gsub("[^0-9.-]", "", Annual.Income))) #change annual income which is a character vector to  numeric so that summarize and sum function will work
+
+top_5_products <- SupermarketTransactions %>%
+  group_by(Product.Category) %>%
+  summarise(Annual.Income = sum(Annual.Income)) %>%
+  arrange(desc(Annual.Income)) %>%
+  head(5)
+
+
+```
+
+
+```{r}
+## Q8 WHAT IS THE NUMBER OF UNITS SOLD IN EACH PRODUCT DEPARTMENT
+SupermarketTransactions %>%
+  group_by(Product.Department)%>%
+  summarise(Totalunitsold =sum(Units.Sold))%>%
+  arrange(desc(Totalunitsold))
+  
+```
+
+
+```{r}
+## Q9 SHOW THE NUMBER OF PRODUCT.FAMILY
+library(dplyr)
+
+SupermarketTransactions %>%
+  filter(Product.Family == "Non-consumable" | Product.Family == "Food") %>%
+  group_by(Product.Family) %>%
+  summarise(count = n())
+
+```
+
+
+```{r}
+## Question 10 create a bar plot of transactions by product category
+library(ggplot2)
+ggplot(SupermarketTransactions, aes(x = Product.Category)) +
+  geom_bar(fill = "skyblue") +
+  theme_minimal() +
+  labs(title = "Number of Transactions by Product Category", x = "Product Category", y = "Count") +
+  theme(
+    axis.text.x = element_text(angle = 50, hjust = 1),  # Rotate x-axis labels
+    axis.text = element_text(size = 10),  # Adjust text size
+    axis.title = element_text(size = 12),  # Adjust axis title size
+    plot.title = element_text(size = 14, face = "bold")  # Adjust plot title size
+  )
+
+
+```
+
+
+```{r}
+## Q11 what is the number of male and female customers
+library(dplyr)
+
+SupermarketTransactions %>%
+  filter(Gender == "M" | Gender == "F") %>%
+  group_by(Gender) %>%
+  summarise(count = n(), .groups = 'drop')
+
+```
+
+
+```{r}
+## Q12 SHOW THE TOTAL REVENUE BYsss CITY
+# Aggregate the revenue by city
+City_Revenue <- aggregate(SupermarketTransactions$Revenue, 
+                          list(SupermarketTransactions$City), 
+                          sum)
+
+# Rename the columns
+colnames(City_Revenue) <- c("City", "Revenue")
+
+# Print the result
+City_Revenue
+
+         
+```
+
+
+```{r}
+## Q13 HOW MANY CUSTOMERS ARE MARRIED IN GENDER COLUMN
+library(dplyr)
+SupermarketTransactions %>%
+  filter(Marital.Status == "M") %>%
+  group_by(Gender) %>%
+  summarise(Married = n())
+  
+
+```
+
+
+```{r}
+## Q14 ## USING GGPLOT SHOW THE REVENUE GENERATED  BY PRODUCT FAMILY
+# Load ggplot2
+library(ggplot2)
+
+# Aggregate revenue by product family
+Revenue_By_ProductFamily <- aggregate(Revenue ~ Product.Family, 
+                                      data = SupermarketTransactions, 
+                                      sum)
+
+# Plot using ggplot2
+ggplot(Revenue_By_ProductFamily, aes(x = reorder(Product.Family, Revenue), y = Revenue)) +
+  geom_bar(stat = "identity", fill = "orange") +
+  theme_minimal() +
+  labs(title = "Revenue Generated by Product Family",
+       x = "Product Family",
+       y = "Total Revenue") +
+  coord_flip()  # Optional: flips axes for better readability
+
+
+
+```
+
+
+```{r}
+## Q15 USING PIE CHART VISUALIZE THE REVENUE GENERATED FOR THE SUPERMARKET  BY GENDER
+library(ggplot2)
+library(dplyr)
+
+# Summarize revenue by city
+Gender_Revenue <- SupermarketTransactions %>%
+  group_by(Gender) %>%
+  summarize(Revenue = sum(Revenue), .groups = 'drop')
+
+# Create a pie chart
+ggplot(Gender_Revenue, aes(x = "", y = Revenue, fill = Gender)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar(theta = "y") +
+  theme_void() +
+  labs(title = "REVENUE BY GENDER")
+
+
+
+```
+
+```{r}
+## Q16 SHOW THE REVENUE GENERATED BY MARITAL STATUS 
+ ggplot(SupermarketTransactions, aes(x = Marital.Status, y = Revenue)) +
+  geom_boxplot(fill = "skyblue") +
+  theme_minimal() +
+  labs(title = "Revenue Distribution by Marital status", x = "Marital.Status", y = "Revenue")
+
+```
+
+```{r}
+#### Question 17 Show the transactions by homeowner column using a bar chart
+library(ggplot2)
+ggplot(SupermarketTransactions, aes(x = Homeowner)) +
+  geom_bar(fill = "yellow") +
+  theme_minimal() +
+  labs(title = "Number of Transactions by by homeowners", x = "Homeowner", y = "Count")
+
+```
+
+```{r}
+## Q18 USING PIE CHART VISUALIZE THE REVENUE GENERATED FOR THE SUPERMARKET  BY COUNTRY
+library(ggplot2)
+library(dplyr)
+
+# Summarize revenue by country
+Country_Revenue <- SupermarketTransactions %>%
+  group_by(Country) %>%
+  summarize(Revenue = sum(Revenue), .groups = 'drop')
+
+# Create a pie chart
+ggplot(Country_Revenue, aes(x = "", y = Revenue, fill = Country)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar(theta = "y") +
+  theme_void() +
+  labs(title = "REVENUE BY COUNTRY")
+
+```
+
+```{r}
+## Question 19  create a bar chart of transactions by number of children
+library(ggplot2)
+ggplot(SupermarketTransactions, aes(x = Children)) +
+  geom_bar(fill = "red") +
+  theme_minimal() +
+  labs(title = " Transactions made by number chidren", x = "Children", y = "Count")
+
+```
+
+```{r}
+## QUESTION 20 USING A BAR CHART SHOW THE NUMBER OF TRANSACTIONS MADE BY EACH PRODUCT DEPARTMENT
+library(ggplot2)
+
+# Create the bar chart
+ggplot(SupermarketTransactions, aes(x = Product.Department)) +
+  geom_bar(fill = "green") +
+  theme_minimal() +
+  labs(title = "Transactions Made by Product Department", x = "Product Department", y = "Count") +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+    axis.text = element_text(size = 10),  # Adjust text size
+    axis.title = element_text(size = 12),  # Adjust axis title size
+    plot.title = element_text(size = 14, face = "bold")  # Adjust plot title size
+  )
+
+
+
+```
+
